@@ -11,6 +11,7 @@ import os
 import socket
 import struct
 import sys
+import time
 import traceback
 import warnings
 
@@ -1181,7 +1182,10 @@ class MySQLResult(object):
             if self._check_packet_is_eof(packet):
                 self.connection = None  # release reference to kill cyclic reference.
                 break
-            rows.append(self._read_row_from_packet(packet))
+            row = self._read_row_from_packet(packet)
+            if not rows:
+                self.time_before_unmarshalling = self.sentinel1
+            rows.append(row)
 
         self.affected_rows = len(rows)
         self.rows = tuple(rows)
@@ -1196,6 +1200,8 @@ class MySQLResult(object):
                 # See https://github.com/PyMySQL/PyMySQL/pull/434
                 break
             if data is not None:
+                if not row:
+                    self.sentinel1 = time.monotonic()
                 if encoding is not None:
                     data = data.decode(encoding)
                 if DEBUG: print("DEBUG: DATA = ", data)

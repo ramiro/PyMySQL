@@ -297,6 +297,7 @@ class Cursor(object):
         if self.rownumber:
             result = self._rows[self.rownumber:]
         else:
+            self.time_before_unmarshalling = self._result.time_before_unmarshalling
             result = self._rows
         self.rownumber = len(self._rows)
         return result
@@ -432,6 +433,8 @@ class SSCursor(Cursor):
 
     def read_next(self):
         """Read next row"""
+        if not self.rownumber:
+            self.time_before_unmarshalling = self._result.time_before_unmarshalling
         return self._conv_row(self._result._read_rowdata_packet_unbuffered())
 
     def fetchone(self):
